@@ -1,6 +1,6 @@
-# 🗺️ Model Configuration Canvas — Upstage Playground PoC
+# 🗺️ [Upstage] Playground > Chat > Configuration 시각화 툴 PoC
 
-[![PoC Screenshot](assets/config-map.png)](http://sunny-croquembouche-d73594.netlify.app)
+[![PoC Screenshot](assets/upstage-deck-02.png)](http://sunny-croquembouche-d73594.netlify.app)
 
 > **"어떤 파라미터를 넣어야 하지?"** 대신, **"원하는 결과가 무엇인지"** 먼저 고르는 LLM 설정 UX입니다.
 
