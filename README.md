@@ -1,4 +1,4 @@
-# 🗺️ [Upstage] Playground > Chat > Configuration 시각화 툴 PoC
+# 🗺️ [Upstage] Playground > Chat > Configuration Map PoC
 
 [![PoC Screenshot](assets/upstage-deck-02.png)](http://sunny-croquembouche-d73594.netlify.app)
 
