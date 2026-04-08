@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upstage Configuration Map</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --surface2: #f2f0eb;
+    --border: rgba(60,55,45,.12);
+    --border-strong: rgba(60,55,45,.22);
+    --text-primary: #1a1814;
+    --text-secondary: #7a7670;
+    --text-tertiary: #b0ada6;
+    --purple: #7F77DD;
+    --purple-light: #EEEDFE;
+    --purple-dark: #534AB7;
+    --green: #1D9E75;
+    --green-light: #E1F5EE;
+    --green-dark: #0F6E56;
+    --amber: #BA7517;
+    --amber-light: #FAEEDA;
+    --amber-dark: #854F0B;
+    --coral: #D85A30;
+    --coral-light: #FAECE7;
+    --coral-dark: #993C1D;
+    --gray: #888780;
+    --gray-light: #F1EFE8;
+    --gray-dark: #5F5E5A;
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+
+  body {
+    font-family: 'Gowun Dodum', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 560px;
+  }
+
+  /* header */
+  .header {
+    margin-bottom: 1.5rem;
+  }
+  .header-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 6px;
+  }
+  .header-title {
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--text-primary);
+    line-height: 1.3;
+  }
+  .header-sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  /* canvas card */
+  .map-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .canvas-wrap {
+    position: relative;
+    cursor: crosshair;
+  }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  .axis-label {
+    position: absolute;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .04em;
+    pointer-events: none;
+    color: rgba(26,24,20,.5);
+  }
+  .ax-y-t { top: 10px; left: 12px; }
+  .ax-y-b { bottom: 28px; left: 12px; }
+  .ax-x-l { bottom: 10px; left: 12px; }
+  .ax-x-r { bottom: 10px; right: 12px; }
+
+  .handle {
+    position: absolute;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: 2.5px solid #fff;
+    background: rgba(255,255,255,.25);
+    cursor: grab;
+    transform: translate(-50%,-50%);
+    display: flex; align-items: center; justify-content: center;
+    transition: box-shadow .15s;
+    box-shadow: 0 2px 12px rgba(0,0,0,.18);
+  }
+  .handle:active { cursor: grabbing; box-shadow: 0 0 0 7px rgba(255,255,255,.22), 0 2px 12px rgba(0,0,0,.18); }
+  .handle-dot { width: 10px; height: 10px; border-radius: 50%; background: #fff; }
+
+  .tip-bubble {
+    position: absolute;
+    transform: translate(-50%, -130%);
+    background: rgba(20,18,14,.82);
+    color: #fff;
+    border-radius: 7px;
+    padding: 6px 11px;
+    font-size: 11px;
+    pointer-events: none;
+    white-space: nowrap;
+    line-height: 1.6;
+    backdrop-filter: blur(4px);
+  }
+  .tip-title { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; }
+  .tip-zone { color: rgba(255,255,255,.65); font-size: 10px; }
+  .tip-cost { color: #FAC775; font-family: 'DM Mono', monospace; font-size: 11px; }
+
+  /* legend */
+  .legend {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    padding: 10px 14px;
+    border-top: 0.5px solid var(--border);
+    background: var(--surface2);
+  }
+  .leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-secondary); }
+  .leg-swatch { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+  .leg-contour {
+    width: 18px; height: 9px; flex-shrink: 0;
+    background: repeating-linear-gradient(90deg, var(--text-tertiary) 0, var(--text-tertiary) 3px, transparent 3px, transparent 6px);
+    border-radius: 2px; opacity: .5;
+  }
+
+  /* result panel */
+  .result-panel {
+    background: var(--surface);
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .cost-section {
+    padding: 16px 18px 12px;
+    border-bottom: 0.5px solid var(--border);
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  }
+  .cost-big {
+    font-family: 'DM Mono', monospace;
+    font-size: 30px; font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: -.02em;
+  }
+  .cost-unit { font-size: 13px; color: var(--text-secondary); }
+  .badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; padding: 3px 9px; border-radius: 20px;
+    letter-spacing: .04em;
+  }
+  .badge-mid { background: var(--purple-light); color: var(--purple-dark); }
+  .badge-up  { background: var(--coral-light);  color: var(--coral-dark); }
+  .badge-dn  { background: var(--green-light);  color: var(--green-dark); }
+
+  .metrics-section {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+  .metric {
+    padding: 12px 14px;
+    border-right: 0.5px solid var(--border);
+  }
+  .metric:last-child { border-right: none; }
+  .metric-label { font-size: 10px; color: var(--text-tertiary); margin-bottom: 4px; letter-spacing: .04em; font-family: 'DM Mono', monospace; }
+  .metric-val { font-size: 18px; font-weight: 400; color: var(--text-primary); font-family: 'DM Mono', monospace; }
+  .metric-bar { height: 2px; border-radius: 2px; margin-top: 6px; background: var(--border); overflow: hidden; }
+  .metric-fill { height: 100%; border-radius: 2px; transition: width .45s cubic-bezier(.4,0,.2,1); }
+
+  .params-section {
+    padding: 12px 18px;
+    border-top: 0.5px solid var(--border);
+    display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+  }
+  .param-pill {
+    font-size: 11px; padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--surface2);
+    border: 0.5px solid var(--border);
+    color: var(--text-secondary);
+    font-family: 'DM Mono', monospace;
+  }
+  .param-pill b { font-weight: 500; color: var(--text-primary); }
+
+  .model-section {
+    padding: 11px 18px;
+    border-top: 0.5px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .model-indicator {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--purple); flex-shrink: 0;
+  }
+  .model-name { font-size: 13px; font-weight: 400; color: var(--text-primary); flex: 1; }
+  .model-reason { font-size: 11px; color: var(--text-secondary); }
+
+  /* copy button */
+  .copy-btn {
+    width: 100%;
+    padding: 13px;
+    background: var(--text-primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    letter-spacing: .04em;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: background .15s, transform .1s;
+    position: relative;
+    overflow: hidden;
+  }
+  .copy-btn:hover { background: #333; }
+  .copy-btn:active { transform: scale(.98); }
+  .copy-btn.copied { background: var(--green-dark); }
+  .copy-btn .btn-icon { font-size: 14px; }
+
+  /* json preview */
+  .json-preview {
+    margin-top: 10px;
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height .35s cubic-bezier(.4,0,.2,1), opacity .25s ease;
+  }
+  .json-preview.open {
+    max-height: 520px;
+    opacity: 1;
+  }
+  .json-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 0.5px solid var(--border);
+    background: var(--surface2);
+  }
+  .json-header-left {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .json-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .json-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+  .json-copied-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--green-light); color: var(--green-dark);
+    opacity: 0; transition: opacity .2s;
+  }
+  .json-copied-badge.show { opacity: 1; }
+  .json-body {
+    padding: 14px 18px;
+    overflow-x: auto;
+  }
+  .json-body pre {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    white-space: pre;
+  }
+  .json-key   { color: #534AB7; }
+  .json-str   { color: #0F6E56; }
+  .json-num   { color: #854F0B; }
+  .json-meta  { color: var(--text-tertiary); }
+
+  /* toast */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px);
+    background: rgba(20,18,14,.88);
+    color: #fff;
+    padding: 9px 18px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .2s, transform .2s;
+    white-space: nowrap;
+    backdrop-filter: blur(6px);
+    z-index: 999;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-eyebrow">Upstage Console · Model Configuration</div>
+    <div class="header-title">원하는 품질 목표를 캔버스에서 선택하세요</div>
+    <div class="header-sub">드래그하거나 클릭하면 최적 파라미터가 자동으로 설정됩니다</div>
+  </div>
+
+  <div class="map-card">
+    <div class="canvas-wrap" id="cwrap" style="height:280px">
+      <canvas id="bgCanvas"></canvas>
+      <div class="axis-label ax-y-t">정확도 높음 ↑</div>
+      <div class="axis-label ax-y-b">정확도 낮음</div>
+      <div class="axis-label ax-x-l">← 일관됨</div>
+      <div class="axis-label ax-x-r">다양성 높음 →</div>
+      <div class="handle" id="handle"><div class="handle-dot"></div></div>
+      <div class="tip-bubble" id="tip">
+        <div class="tip-title" id="tip-t">정확도 72 · 다양성 35</div>
+        <div style="display:flex;gap:8px;margin-top:2px">
+          <span class="tip-zone" id="tip-z">코드 생성</span>
+          <span class="tip-cost" id="tip-c">$1.84</span>
+        </div>
+      </div>
+    </div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="result-panel">
+    <div class="cost-section">
+      <span class="cost-big" id="cost-num">$1.84</span>
+      <span class="cost-unit">/ 1,000 calls 예상</span>
+      <span class="badge badge-mid" id="cost-badge">평균 수준</span>
+    </div>
+    <div class="metrics-section">
+      <div class="metric">
+        <div class="metric-label">ACCURACY</div>
+        <div class="metric-val" id="m-acc">72</div>
+        <div class="metric-bar"><div class="metric-fill" id="f-acc" style="width:72%;background:var(--purple)"></div></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">DIVERSITY</div>
+        <div class="metric-val" id="m-div">35</div>
+        <div class="metric-bar"><div class="metric-fill" id="f-div" style="width:35%;background:var(--green)"></div></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">SPEED</div>
+        <div class="metric-val" id="m-spd">61</div>
+        <div class="metric-bar"><div class="metric-fill" id="f-spd" style="width:61%;background:var(--coral)"></div></div>
+      </div>
+    </div>
+    <div class="params-section" id="pills"></div>
+    <div class="model-section">
+      <div class="model-indicator" id="model-dot"></div>
+      <span class="model-name" id="model-name">Solar Pro 3</span>
+      <span class="model-reason" id="model-reason">정확도 우선 구간에 최적</span>
+    </div>
+  </div>
+
+  <button class="copy-btn" id="copyBtn" type="button">
+    <span class="btn-icon" id="btn-icon">⎘</span>
+    <span id="btn-label">Configuration 복사</span>
+  </button>
+
+  <!-- JSON preview panel -->
+  <div class="json-preview" id="jsonPreview">
+    <div class="json-header">
+      <div class="json-header-left">
+        <div class="json-dot"></div>
+        <span class="json-title">copied output</span>
+      </div>
+      <span class="json-copied-badge" id="jsonBadge">✓ 클립보드에 복사됨</span>
+    </div>
+    <div class="json-body">
+      <pre id="jsonDisplay"></pre>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast" aria-live="polite">클립보드에 복사되었습니다</div>
+
+<script>
+const POLICY = {
+  pointClamp: { xMin: 0.02, xMax: 0.97, yMin: 0.04, yMax: 0.93 },
+  cost: { base: 0.58, accWeight: 0.024, divWeight: 0.007 },
+  modelRules: [
+    { maxAcc: 54, model: 'solar-mini', label: 'Solar Mini', reason: '속도·비용 최적', maxTokens: 2048, effort: 'low' },
+    { maxAcc: 71, model: 'solar-pro-2', label: 'Solar Pro 2', reason: '균형 잡힌 성능', maxTokens: 8192, effort: 'medium' },
+    { maxAcc: 100, model: 'solar-pro-3', label: 'Solar Pro 3', reason: '정확도 우선 구간에 최적', maxTokens: 16384, effort: 'high' },
+  ],
+  contourLevels: [1.0, 1.8, 2.6, 3.4],
+};
+
+const zones = [
+  { name:'정확한 QA / 검색', cx:.22, cy:.22, color:[127,119,221] },
+  { name:'코드 생성',         cx:.28, cy:.55, color:[29,158,117]  },
+  { name:'요약 / 분류',       cx:.22, cy:.78, color:[136,135,128] },
+  { name:'창의적 글쓰기',     cx:.72, cy:.22, color:[186,117,23]  },
+  { name:'브레인스토밍',      cx:.75, cy:.75, color:[216,90,48]   },
+];
+const zoneHexes = ['#7F77DD','#1D9E75','#888780','#BA7517','#D85A30'];
+
+const cwrap = document.getElementById('cwrap');
+const bgCanvas = document.getElementById('bgCanvas');
+const ctx = bgCanvas.getContext('2d');
+const handle = document.getElementById('handle');
+const tip = document.getElementById('tip');
+const copyBtn = document.getElementById('copyBtn');
+
+cwrap.setAttribute('role', 'application');
+cwrap.setAttribute('aria-label', '모델 설정 캔버스');
+handle.setAttribute('tabindex', '0');
+handle.setAttribute('role', 'slider');
+handle.setAttribute('aria-label', '정확도와 다양성 조절 핸들');
+
+let px = 0.35, py = 0.28;
+let dragging = false;
+
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+
+function getNearestZone(x,y) {
+  let best = zones[0], bestD = Infinity;
+  for (const z of zones) {
+    const d = Math.hypot(x - z.cx, y - z.cy);
+    if (d < bestD) { bestD = d; best = z; }
+  }
+  return best;
+}
+
+function getCost(acc, div) {
+  return POLICY.cost.base + acc * POLICY.cost.accWeight + div * POLICY.cost.divWeight;
+}
+
+function getModelRule(acc) {
+  return POLICY.modelRules.find((rule) => acc <= rule.maxAcc) || POLICY.modelRules[POLICY.modelRules.length - 1];
+}
+
+function renderPills(temp, effort, maxTokens) {
+  const pills = document.getElementById('pills');
+  pills.textContent = '';
+  const items = [
+    ['temperature', temp],
+    ['reasoning_effort', effort],
+    ['max_tokens', maxTokens.toLocaleString()],
+  ];
+  for (const [key, value] of items) {
+    const pill = document.createElement('span');
+    pill.className = 'param-pill';
+    pill.append(document.createTextNode(`${key} `));
+    const strong = document.createElement('b');
+    strong.textContent = String(value);
+    pill.append(strong);
+    pills.append(pill);
+  }
+}
+
+function renderLegend() {
+  const legend = document.getElementById('legend');
+  legend.textContent = '';
+  for (let i = 0; i < zones.length; i++) {
+    const item = document.createElement('div');
+    item.className = 'leg-item';
+    const swatch = document.createElement('div');
+    swatch.className = 'leg-swatch';
+    swatch.style.background = `${zoneHexes[i]}88`;
+    const label = document.createElement('span');
+    label.textContent = zones[i].name;
+    item.append(swatch, label);
+    legend.append(item);
+  }
+  const contour = document.createElement('div');
+  contour.className = 'leg-item';
+  const contourShape = document.createElement('div');
+  contourShape.className = 'leg-contour';
+  const contourLabel = document.createElement('span');
+  contourLabel.textContent = '비용 등고선';
+  contour.append(contourShape, contourLabel);
+  legend.append(contour);
+}
+
+function drawBg() {
+  const W = cwrap.clientWidth, H = cwrap.clientHeight;
+  bgCanvas.width = W; bgCanvas.height = H;
+  const step = 5;
+  for (let ix = 0; ix < W; ix += step) {
+    for (let iy = 0; iy < H; iy += step) {
+      const fx = ix / W, fy = iy / H;
+      let r=0,g=0,b=0,tot=0;
+      for (const z of zones) {
+        const d = Math.hypot(fx - z.cx, fy - z.cy);
+        const w = Math.exp(-d * 4.2);
+        r += z.color[0]*w; g += z.color[1]*w; b += z.color[2]*w; tot += w;
+      }
+      r/=tot; g/=tot; b/=tot;
+      const m = 0.28;
+      r = Math.round(r*m + 248*(1-m));
+      g = Math.round(g*m + 246*(1-m));
+      b = Math.round(b*m + 242*(1-m));
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fillRect(ix, iy, step+1, step+1);
+    }
+  }
+
+  // cost contour lines
+  ctx.setLineDash([3,6]);
+  ctx.lineWidth = 1;
+  for (const c of POLICY.contourLevels) {
+    ctx.strokeStyle = 'rgba(60,50,30,.18)';
+    ctx.beginPath();
+    let started = false;
+    for (let ix = 0; ix <= W; ix += 3) {
+      const fx = ix / W;
+      const acc_needed = (c - POLICY.cost.base - fx * 100 * POLICY.cost.divWeight) / (100 * POLICY.cost.accWeight);
+      const fy = 1 - acc_needed;
+      if (fy < 0.02 || fy > 0.96) { started = false; continue; }
+      const iy = fy * H;
+      if (!started) { ctx.moveTo(ix, iy); started = true; }
+      else ctx.lineTo(ix, iy);
+    }
+    ctx.stroke();
+    // cost label
+    const acc_for_label = (c - POLICY.cost.base - 0.96 * 100 * POLICY.cost.divWeight) / (100 * POLICY.cost.accWeight);
+    const label_fy = 1 - acc_for_label;
+    if (label_fy > 0.04 && label_fy < 0.93) {
+      ctx.fillStyle = 'rgba(60,50,30,.38)';
+      ctx.font = '500 9px DM Mono, monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText('$'+c.toFixed(1), W-6, label_fy*H - 3);
+    }
+  }
+  ctx.setLineDash([]);
+
+  // zone name watermarks
+  for (let i=0; i<zones.length; i++) {
+    const z = zones[i];
+    const lx = z.cx * W, ly = z.cy * H;
+    ctx.font = '400 10.5px Gowun Dodum, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = zoneHexes[i] + 'aa';
+    ctx.fillText(z.name, lx, ly);
+  }
+  ctx.textAlign = 'left';
+}
+
+let _lastConfig = {};
+
+function update() {
+  handle.style.left = (px*100)+'%';
+  handle.style.top  = (py*100)+'%';
+  tip.style.left    = (px*100)+'%';
+  tip.style.top     = (py*100)+'%';
+
+  const acc = Math.round((1-py)*100);
+  const div = Math.round(px*100);
+  const spd = Math.max(8, Math.round(100 - acc*0.38 - div*0.18));
+  const cost = getCost(acc, div);
+  const costFmt = '$'+cost.toFixed(2);
+  const zone = getNearestZone(px, py);
+
+  document.getElementById('tip-t').textContent = '정확도 '+acc+' · 다양성 '+div;
+  document.getElementById('tip-z').textContent = zone.name;
+  document.getElementById('tip-c').textContent = costFmt;
+
+  document.getElementById('cost-num').textContent = costFmt;
+  const badgeEl = document.getElementById('cost-badge');
+  if (cost < 1.5) { badgeEl.textContent='저비용'; badgeEl.className='badge badge-dn'; }
+  else if (cost < 2.5) { badgeEl.textContent='평균 수준'; badgeEl.className='badge badge-mid'; }
+  else { badgeEl.textContent='고비용'; badgeEl.className='badge badge-up'; }
+
+  document.getElementById('m-acc').textContent = acc;
+  document.getElementById('m-div').textContent = div;
+  document.getElementById('m-spd').textContent = spd;
+  document.getElementById('f-acc').style.width = acc+'%';
+  document.getElementById('f-div').style.width = div+'%';
+  document.getElementById('f-spd').style.width = spd+'%';
+
+  const temp = (div / 100 * 1.4 + 0.1).toFixed(1);
+  const selectedRule = getModelRule(acc);
+  const effort = selectedRule.effort;
+  const maxTokens = selectedRule.maxTokens;
+  const model = selectedRule.model;
+  const modelLabel = selectedRule.label;
+  const modelReason = selectedRule.reason;
+
+  renderPills(temp, effort, maxTokens);
+
+  document.getElementById('model-name').textContent = modelLabel;
+  document.getElementById('model-reason').textContent = modelReason;
+
+  _lastConfig = { model, temperature: parseFloat(temp), reasoning_effort: effort, max_tokens: maxTokens, _meta: { accuracy_score: acc, diversity_score: div, estimated_cost_per_1k_calls: parseFloat(cost.toFixed(2)), use_case: zone.name } };
+
+  handle.setAttribute('aria-valuemin', '0');
+  handle.setAttribute('aria-valuemax', '100');
+  handle.setAttribute('aria-valuenow', String(acc));
+  handle.setAttribute('aria-valuetext', `정확도 ${acc}, 다양성 ${div}, 비용 ${costFmt}`);
+  renderLegend();
+}
+
+function pointerPos(e) {
+  const r = cwrap.getBoundingClientRect();
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  const cy = e.touches ? e.touches[0].clientY : e.clientY;
+  return {
+    x: clamp((cx - r.left) / r.width, POLICY.pointClamp.xMin, POLICY.pointClamp.xMax),
+    y: clamp((cy - r.top) / r.height, POLICY.pointClamp.yMin, POLICY.pointClamp.yMax),
+  };
+}
+
+handle.addEventListener('mousedown', e=>{ dragging=true; e.preventDefault(); });
+handle.addEventListener('touchstart', e=>{ dragging=true; e.preventDefault(); }, {passive:false});
+document.addEventListener('mousemove', e=>{ if(!dragging)return; const p=pointerPos(e); px=p.x; py=p.y; update(); });
+document.addEventListener('touchmove', e=>{ if(!dragging)return; const p=pointerPos(e); px=p.x; py=p.y; update(); }, {passive:false});
+document.addEventListener('mouseup', ()=>{ dragging=false; });
+document.addEventListener('touchend', ()=>{ dragging=false; });
+cwrap.addEventListener('click', e=>{ const p=pointerPos(e); px=p.x; py=p.y; update(); });
+handle.addEventListener('keydown', (e) => {
+  const unit = e.shiftKey ? 0.05 : 0.01;
+  let moved = false;
+  if (e.key === 'ArrowLeft') { px = clamp(px - unit, POLICY.pointClamp.xMin, POLICY.pointClamp.xMax); moved = true; }
+  if (e.key === 'ArrowRight') { px = clamp(px + unit, POLICY.pointClamp.xMin, POLICY.pointClamp.xMax); moved = true; }
+  if (e.key === 'ArrowUp') { py = clamp(py - unit, POLICY.pointClamp.yMin, POLICY.pointClamp.yMax); moved = true; }
+  if (e.key === 'ArrowDown') { py = clamp(py + unit, POLICY.pointClamp.yMin, POLICY.pointClamp.yMax); moved = true; }
+  if (moved) {
+    e.preventDefault();
+    update();
+  }
+});
+
+function escapeHtml(text) {
+  return text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function syntaxHighlight(obj) {
+  const json = JSON.stringify(obj, null, 2);
+  const parts = [];
+  let lastIndex = 0;
+  const tokenRegex = /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g;
+  let match;
+  while ((match = tokenRegex.exec(json)) !== null) {
+    parts.push(escapeHtml(json.slice(lastIndex, match.index)));
+    const token = match[0];
+    const safeToken = escapeHtml(token);
+    if (/^"/.test(token)) {
+      if (/:$/.test(token)) {
+        const key = token.slice(0, -1);
+        if (key === '"_meta"') parts.push(`<span class="json-meta">${safeToken}</span>`);
+        else parts.push(`<span class="json-key">${safeToken}</span>`);
+      } else {
+        parts.push(`<span class="json-str">${safeToken}</span>`);
+      }
+    } else {
+      parts.push(`<span class="json-num">${safeToken}</span>`);
+    }
+    lastIndex = tokenRegex.lastIndex;
+  }
+  parts.push(escapeHtml(json.slice(lastIndex)));
+  return parts.join('');
+}
+
+function showJsonPreview() {
+  const preview = document.getElementById('jsonPreview');
+  const display = document.getElementById('jsonDisplay');
+  const badge = document.getElementById('jsonBadge');
+  display.innerHTML = syntaxHighlight(_lastConfig);
+  preview.classList.add('open');
+  badge.classList.add('show');
+  setTimeout(() => badge.classList.remove('show'), 2500);
+}
+
+function copyConfig() {
+  const json = JSON.stringify(_lastConfig, null, 2);
+  showJsonPreview();
+  navigator.clipboard.writeText(json).then(()=>{
+    const btn = document.getElementById('copyBtn');
+    const icon = document.getElementById('btn-icon');
+    const label = document.getElementById('btn-label');
+    btn.classList.add('copied');
+    icon.textContent = '✓';
+    label.textContent = '복사 완료';
+    setTimeout(()=>{
+      btn.classList.remove('copied');
+      icon.textContent = '⎘';
+      label.textContent = 'Configuration 복사';
+    }, 2200);
+  }).catch(()=>{
+    const ta = document.createElement('textarea');
+    ta.value = json;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+}
+
+copyBtn.addEventListener('click', copyConfig);
+setTimeout(()=>{ drawBg(); update(); }, 60);
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  if (resizeTimer) clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    drawBg();
+    update();
+  }, 120);
+});
+</script>
+</body>
+</html>
