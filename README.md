@@ -1,15 +1,15 @@
 # 🗺️ Model Configuration Canvas — Upstage Playground PoC
 
-[![PoC Screenshot](assets/config-mp.png)](http://sunny-croquembouche-d73594.netlify.app)
+[![PoC Screenshot](assets/config-map.png)](http://sunny-croquembouche-d73594.netlify.app)
 
 > **"어떤 파라미터를 넣어야 하지?"** 대신, **"원하는 결과가 무엇인지"** 먼저 고르는 LLM 설정 UX입니다.
 
 ---
 
-## 왜 만들었나요?
+## 개발 배경
 
-LLM 설정 화면은 보통 `temperature`, `reasoning_effort`, `max_tokens` 같은 파라미터 중심입니다.  
-하지만 초심자에게는 "이 숫자가 결과에 어떤 영향을 주는지"가 직관적이지 않습니다.
+LLM 설정 화면은 보통 `temperature`, `reasoning_effort`, `max_tokens` 같은 파라미터 중심입니다.
+하지만 사용자에게는 "이 숫자가 결과에 어떤 영향을 주는지"가 직관적이지 않습니다.
 
 이 프로젝트는 이 문제를 해결하기 위해,  
 **사용자가 목표(정확도/다양성)를 먼저 선택하면 파라미터를 자동으로 매핑**하도록 만들었습니다.
