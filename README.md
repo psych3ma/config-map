@@ -1,114 +1,99 @@
-# [Upstage] Playground Chat Configuration 시각화 맵
+# 🗺️ Model Configuration Canvas — Upstage Playground PoC
 
 [![PoC Screenshot](config-map.png)](http://sunny-croquembouche-d73594.netlify.app)
 
-개인 PoC 포트폴리오 프로젝트입니다.  
-`temperature`, `reasoning_effort`, `max_tokens` 같은 복잡한 설정을 숫자 입력 대신 **2D 맵(정확도-다양성)**으로 직관적으로 고를 수 있게 만들었습니다.
+> **"어떤 파라미터를 넣어야 하지?"** 대신, **"원하는 결과가 무엇인지"** 먼저 고르는 LLM 설정 UX 실험입니다.
 
-- 기간: 2026.04 ~ 2026.04
-- 유형: 개인 프로젝트 (Cursor AI 활용)
-- 데모: [http://sunny-croquembouche-d73594.netlify.app](http://sunny-croquembouche-d73594.netlify.app)
-
----
-
-## 왜 만들었나요? (개발 배경)
-
-기존 LLM 설정 화면은 모델이 이해하는 언어(파라미터 중심)로 구성되는 경우가 많습니다.  
-개발자에게는 익숙하지만, 초보자 입장에서는 아래 질문이 남습니다.
-
-- `temperature`를 올리면 내 작업에 어떤 변화가 생길까?
-- 정확한 QA와 창의적 글쓰기는 어떤 지점에서 갈릴까?
-- 비용과 품질의 균형은 어디에서 잡아야 할까?
-
-이 프로젝트는 이 간극을 줄이기 위해,  
-**사용자가 "원하는 결과"를 먼저 선택하면 시스템이 파라미터를 자동으로 매핑**하도록 설계했습니다.
+- 🔗 Live Demo: [sunny-croquembouche-d73594.netlify.app](http://sunny-croquembouche-d73594.netlify.app)
+- 📅 기간: 2026.04
+- 🧰 도구: HTML, CSS, JavaScript, Cursor AI
+- 🎯 대상: Upstage Solar API를 처음 사용하는 개발자/기획자
 
 ---
 
-## 한눈에 보는 핵심 기능
+## 왜 만들었나요?
 
-- **정확도-다양성 맵 선택**
-  - 드래그/클릭으로 원하는 결과 성향을 고르면 즉시 값이 반영됩니다.
-- **실시간 결과 카드**
-  - Accuracy, Diversity, Speed, 예상 비용을 바로 확인할 수 있습니다.
-- **모델/파라미터 자동 추천**
-  - 선택 좌표에 맞춰 모델(`solar-mini/pro-2/pro-3`)과 설정을 자동 계산합니다.
-- **JSON 원클릭 복사**
-  - 바로 API 호출에 붙일 수 있는 configuration JSON을 복사할 수 있습니다.
-- **기본 접근성 대응**
-  - 키보드 화살표로 핸들 이동, `Shift + Arrow`로 빠른 이동이 가능합니다.
+LLM 설정 화면은 보통 `temperature`, `reasoning_effort`, `max_tokens` 같은 파라미터 중심입니다.  
+하지만 초심자에게는 "이 숫자가 결과에 어떤 영향을 주는지"가 직관적이지 않습니다.
+
+이 프로젝트는 이 문제를 해결하기 위해,  
+**사용자가 목표(정확도/다양성)를 먼저 선택하면 파라미터를 자동으로 매핑**하도록 만들었습니다.
 
 ---
 
-## 비개발자를 위한 사용 방법
+## AS-IS vs TO-BE
 
-1. 맵에서 원하는 지점을 클릭하거나 핸들을 드래그합니다.  
-2. 아래 카드에서 비용/속도/품질 지표를 확인합니다.  
-3. 오른쪽 모델 설명을 보고 현재 추천 이유를 확인합니다.  
-4. `Configuration 복사` 버튼으로 JSON을 복사합니다.  
-5. 복사한 내용을 Playground/API 설정에 붙여 넣습니다.
+| 구분 | AS-IS (기존 방식) | TO-BE (이 PoC) |
+|---|---|---|
+| 시작점 | 파라미터 숫자 입력 | 목표 결과 선택 (2D 캔버스) |
+| 의사결정 | 문서/경험 기반 수동 판단 | 시각화 + 실시간 피드백 |
+| 비용 인식 | 호출 후 확인 | 선택 즉시 예상 비용 확인 |
+| API 연결 | 수동 JSON 작성 | 원클릭 JSON 복사 |
+| 온보딩 난이도 | 높음 | 낮음 |
 
 ---
 
-## 기술적으로 무엇이 좋은가요? (CTO 관점 요약)
+## 핵심 기능
 
-PoC이지만, 포트폴리오용으로 아래 기준을 의식해 구성했습니다.
+- **정확도-다양성 2D 캔버스**
+  - 클릭/드래그로 결과 성향 선택
+  - 대표 사용 사례 구간(정확한 QA, 코드 생성, 요약/분류, 창의적 글쓰기, 브레인스토밍) 시각화
+- **실시간 트레이드오프 표시**
+  - Accuracy, Diversity, Speed, 예상 비용을 즉시 업데이트
+  - 모델 추천(`solar-mini`, `solar-pro-2`, `solar-pro-3`)과 추천 이유 동시 제공
+- **Configuration JSON 원클릭 복사**
+  - 선택 지점의 설정값을 JSON으로 즉시 복사
+- **기본 접근성 지원**
+  - 키보드 화살표 이동, `Shift + Arrow` 빠른 이동 지원
+
+---
+
+## UX/LLM/CTO 관점 설계 포인트
 
 - **하드코딩 최소화**
-  - 비용 식, 모델 선택 규칙, 좌표 clamp, contour 레벨을 `POLICY` 객체로 분리
+  - 비용 계산식, 모델 선택 임계값, 좌표 clamp를 `POLICY`로 관리
 - **확장성**
-  - 정책만 바꿔도 추천 결과가 바뀌도록 구조화 (로직 수정 범위 축소)
+  - 정책값 변경만으로 추천 동작 조정 가능
 - **유지보수성**
-  - 도메인 함수와 렌더링 책임을 분리해 변경 영향 범위를 줄임
+  - 도메인 계산과 렌더 책임을 분리해 변경 영향 범위 축소
 - **협업 코드**
-  - 문자열 `innerHTML` 조합 대신 안전한 DOM 생성 방식 사용
+  - 동적 UI 갱신에서 안전한 DOM API 중심으로 구성
 - **일관성**
-  - 이벤트 바인딩/상태 갱신/정책 참조 흐름을 통일
-
----
-
-## 프로젝트 구조
-
-현재는 단일 HTML PoC로 빠르게 검증하는 구조입니다.
-
-```text
-config-map/
-  ├─ config-map.png
-  ├─ upstage_config_map.html
-  ├─ UX_CTO_REVIEW.md
-  ├─ DEV_CTO_PRIORITY_REVIEW.md
-  └─ README.md
-```
+  - 입력 -> 계산 -> 출력 흐름을 단일 사이클로 유지
 
 ---
 
 ## 로컬 실행 방법
 
-별도 빌드 도구 없이 바로 실행할 수 있습니다.
+이 프로젝트는 단일 HTML PoC입니다.
 
 ```bash
 open upstage_config_map.html
 ```
 
-또는 VS Code/Cursor의 Live Server 등으로 열어도 됩니다.
+또는 Live Server로 `upstage_config_map.html`을 열면 됩니다.
 
 ---
 
-## 현재 한계와 다음 단계
+## 프로젝트 구조
 
-PoC 특성상 아래는 후속 개선 대상으로 남겨두었습니다.
-
-- 다국어(i18n) 키 기반 문구 관리
-- 정책(`POLICY`) 외부 파일 분리 (`policy.json`)
-- 프리셋(저비용/고정확도/균형형) 및 비교 기능
-- 자동화 테스트(정책 경계값, 핵심 사용자 플로우)
-- 이벤트 분석(드래그, 복사 성공/실패) 계측
+```text
+config-map/
+  ├─ config-map.png
+  ├─ upstage_config_map.html
+  ├─ README.md
+  └─ TEAM_README.md
+```
 
 ---
 
-## 이런 분께 추천
+## 한계와 다음 단계
 
-- LLM 파라미터를 숫자보다 **결과 중심**으로 설명하고 싶은 PM/기획자
-- 사용자 친화적인 AI 설정 UX를 빠르게 검증하고 싶은 팀
-- 품질-비용 trade-off를 시각적으로 보여주고 싶은 데모 제작자
+- 실제 Solar API 응답 미리보기 연동
+- 태스크별 품질 평가 데이터 기반 매핑 보정
+- 프리셋(저비용/균형/고정확도) 및 비교 UX 추가
+- 정책 외부 파일화(`policy.json`)와 테스트 자동화
 
+---
+
+Built with Cursor AI · 개인 PoC 포트폴리오 프로젝트
